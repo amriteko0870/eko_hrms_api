@@ -47,6 +47,7 @@ class leave_log(models.Model):
     TYPE = models.CharField(max_length=1) # (C,S) C -> Casual , S -> Sick
     REASON = models.TextField()
     STATUS = models.CharField(max_length=1) #(A,P,D) A-> Approved P-> Pending D -> Declined
+    DURATION = models.IntegerField()
 
 class task_log(models.Model):
     EMP_ID = models.CharField(max_length=300)

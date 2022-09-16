@@ -2,12 +2,12 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password,check_password
 
-from apiApp.models import user_details
+from apiApp.models import leave_log, user_details
 
 # Create your views here.
 from django.db.models.functions import Cast
-from django.db.models import F,TimeField
-
+from django.db.models import F,Sum
+# from django.db.models import Avg,Count,Case, When, IntegerField,Sum,FloatField,CharField
 
 from rest_framework.decorators import parser_classes,api_view
 from rest_framework.parsers import MultiPartParser,FormParser
@@ -40,7 +40,40 @@ def login(request,format=None):
         return Response({'status':'false',
                             'message':"invalid credentials"})
 
+@api_view(['POST'])
+def leaves(request,format=None):
+    emp_id = (request.data)['emp_id']
+    # token = (request.headers)['Authorization']
+    # check_token = user_details.objects.get(EMP_ID = emp_id)
+    # if(check_token.TOKEN != token):
+    #     return Response({'Message':'FALSE'})
 
+    obj = leave_log.objects.filter(EMP_ID = emp_id)
+    total_days = obj.aggregate(count = Sum('DURATION'))['count']
+    sick_leaves = obj.filter(TYPE='S').aggregate(count = Sum('DURATION'))['count']
+    casual_leaves = obj.filter(TYPE='C').aggregate(count = Sum('DURATION'))['count']
+
+    leave_data = obj.annotate(
+                              leave_duration = F('DURATION_TYPE'),
+                              start_date = F('START_DATE_TIMESTAMP'),
+                              end_date = F('END_DATE_TIMESTAMP'),
+                              leave_status = F('STATUS'),
+                              leave_reason = F('REASON')
+                             )\
+                    .values('leave_duration','start_date','end_date','leave_status','leave_reason')\
+                    .order_by('-start_date')
+
+    leave_stats = {
+                 'total_days':total_days,
+                 'total_sick_days':sick_leaves,
+                 'total_casual_days':casual_leaves,
+                 'leave_history':leave_data
+                  }
+    return Response({
+                    'status':'true',
+                    'message':"Successful",
+                    'leave_stats':leave_stats
+                    })
 # def index(request):
 #     password = '1234'
 
