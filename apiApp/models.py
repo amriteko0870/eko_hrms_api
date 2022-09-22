@@ -12,7 +12,7 @@ class user_details(models.Model):
     PASSWORD = models.CharField(max_length=300)
 
     JOINING_DATE = models.CharField(max_length=300)
-    JOINING_DATE_TIMESTAMP = models.BigIntegerField()
+    JOINING_DATE_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
     USER_TYPE = models.CharField(max_length=1) # (S,U) S -> Super-user , U -> User
     TOKEN = models.CharField(max_length=300) # username + passowrd
@@ -20,40 +20,45 @@ class user_details(models.Model):
 class timesheet_log(models.Model):
     EMP_ID = models.CharField(max_length=300)
 
-    CLOCK_IN = models.BigIntegerField()
-    CLOCK_IN_TIMESTAMP = models.BigIntegerField()
+    CLOCK_IN = models.CharField(max_length=300)
+    CLOCK_IN_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
-    CLOCK_OUT = models.BigIntegerField()
-    CLOCK_OUT_TIMESTAMP = models.BigIntegerField()
+    CLOCK_OUT = models.CharField(max_length=300)
+    CLOCK_OUT_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
+    DATE = models.BigIntegerField(null=True,blank=True)
     WORK_TYPE = models.CharField(max_length=1) # (O,H) O -> Office , H -> HOME
-    SHOW_VALIDATION = models.IntegerField()
+    SHOW_VALIDATION = models.IntegerField(null=True,blank=True)
+    DAY_TYPE = models.CharField(max_length=1) # (W,L,H) W -> Working , L -> Leave , H -> Holiday
+    DURATION = models.BigIntegerField(null=True,blank=True)
 
 class overtime_log(models.Model):
-    EMPT_ID = models.CharField(max_length=300)
+    EMP_ID = models.CharField(max_length=300)
     WORK_TYPE = models.CharField(max_length=1) # (O,H) O -> Office , H -> HOME
-    DURATION = models.BigIntegerField() # in minutes
+    DURATION = models.BigIntegerField(null=True,blank=True) # in minutes
+    DATE = models.CharField(max_length=300)
+    DATE_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
 class leave_log(models.Model):
     EMP_ID = models.CharField(max_length=300)
     DURATION_TYPE = models.CharField(max_length=1) # (H,F) H -> Half-day , F -> Full-day
     
     START_DATE = models.CharField(max_length=300)
-    START_DATE_TIMESTAMP = models.BigIntegerField()
+    START_DATE_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
     
     END_DATE = models.CharField(max_length=300)
-    END_DATE_TIMESTAMP = models.BigIntegerField()
+    END_DATE_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
     TYPE = models.CharField(max_length=1) # (C,S) C -> Casual , S -> Sick
     REASON = models.TextField()
     STATUS = models.CharField(max_length=1) #(A,P,D) A-> Approved P-> Pending D -> Declined
-    DURATION = models.IntegerField()
+    DURATION = models.IntegerField(null=True,blank=True)
 
 class task_log(models.Model):
     EMP_ID = models.CharField(max_length=300)
 
     DATE = models.CharField(max_length=300)
-    DATE_TIMESTAMP = models.BigIntegerField()
+    DATE_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
     TASK = models.TextField()
     PROJECT = models.CharField(max_length=300)
@@ -62,10 +67,10 @@ class task_log(models.Model):
 
 class event_log(models.Model):
     START_DATE = models.CharField(max_length=300)
-    START_DATE_TIMESTAMP = models.BigIntegerField()
+    START_DATE_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
     END_DATE = models.CharField(max_length=300)
-    END_DATA_TIMESTAMP = models.BigIntegerField()
+    END_DATA_TIMESTAMP = models.BigIntegerField(null=True,blank=True)
 
     EVENT_NAME = models.CharField(max_length=300)
 
