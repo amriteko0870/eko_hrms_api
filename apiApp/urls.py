@@ -10,6 +10,8 @@ urlpatterns = [
     path('userDetails',views.userDetails,name='userDetails'),
     path('clockInOut',views.clockInOut,name='clockInOut'),
     path('taskLog',views.taskLog,name='taskLog'),
+    path('taskLogUpdation',views.taskLogUpdation,name='taskLogUpdation'),
+    
     
     
 ]

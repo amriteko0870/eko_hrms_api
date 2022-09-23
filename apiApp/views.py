@@ -18,6 +18,7 @@ from datetime import datetime
 import time 
 import random
 import string
+import pandas as pd
 #EKO-L8HUG
 
 @api_view(['POST'])
@@ -294,6 +295,65 @@ def taskLog(request,format=None):
                        'message':"Successful",
                        'task_log': res
                     })
+
+
+@api_view(['POST'])
+def taskLogUpdation(request,format=None):
+  emp_id = (request.data)['emp_id']
+  date = (request.data)['date']
+  r_type = (request.data)['r_type']
+  print(emp_id,date,r_type)
+  d = time.mktime(datetime.strptime(date, "%d-%m-%Y").timetuple())
+  if r_type == 'G':
+    obj = task_log.objects.filter(
+                                  EMP_ID = emp_id,
+                                  DATE_TIMESTAMP = d
+                                 )
+    task = obj.values_list('TASK',flat=True).last()
+    project = obj.values_list('PROJECT',flat=True).last()
+    project_color = obj.values_list('PROJECT_COLOR',flat=True).last()
+    remark = obj.values_list('REMARKS',flat=True).last()
+    task_array = pd.DataFrame({
+                              'status':'true',
+                              'message':"Successful",
+                              'task': task.split('|'),
+                              'project': project.split('|'),
+                              'project_color':project_color.split('|'),
+                             }).to_dict(orient='records')
+    res = {
+            'date':date,
+            'remark': remark,
+            'task_array':task_array
+        }
+    return Response(res)
+  elif r_type == 'P':
+    data = (request.data)['task_array']
+    remark = (request.data)['remark']
+    data = pd.DataFrame(data).to_dict(orient='list')
+    obj = task_log.objects.filter(
+                            EMP_ID = emp_id,
+                            DATE_TIMESTAMP = d
+                            )
+    obj.update(
+               TASK = "|".join(data['task']),
+               PROJECT = "|".join(data['project']),
+               PROJECT_COLOR = "|".join(data['project_color']),
+               REMARKS = remark,
+              ) 
+    res = task_log.objects.filter(EMP_ID = emp_id).order_by('-DATE_TIMESTAMP')
+    res = obj.values('DATE').annotate(
+                                      date = F('DATE'),
+                                      projects = F('PROJECT'),
+                                      tasks = F('TASK'),
+                                      color = F('PROJECT_COLOR'),
+                                      remark = F('REMARKS')
+                                    )
+    return Response({'status':'true',
+                     'message':"Successful",
+                    #  'task_array': data,
+                     'updated_array': res,
+                    })
+
 
 
 
