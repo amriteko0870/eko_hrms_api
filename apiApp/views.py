@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password,check_password
 
-from apiApp.models import leave_log, overtime_log, task_log, timesheet_log, user_details
+from apiApp.models import leave_log, overtime_log, projects_log, task_log, timesheet_log, user_details
 
 # Create your views here.
 from django.db.models.functions import Cast,Coalesce
@@ -302,7 +302,7 @@ def taskLogUpdation(request,format=None):
   emp_id = (request.data)['emp_id']
   date = (request.data)['date']
   r_type = (request.data)['r_type']
-  print(emp_id,date,r_type)
+  print('################### ',emp_id,date,r_type)
   d = time.mktime(datetime.strptime(date, "%d-%m-%Y").timetuple())
   if r_type == 'G':
     obj = task_log.objects.filter(
@@ -353,6 +353,77 @@ def taskLogUpdation(request,format=None):
                     #  'task_array': data,
                      'updated_array': res,
                     })
+  
+@api_view(['POST'])
+def projectAdd(request,format=None):
+  emp_id = (request.data)['emp_id']
+  project_name = (request.data)['project_name']
+  project_color = (request.data)['project_color']
+  obj  = projects_log.objects.filter(EMP_ID = emp_id).values_list('PROJECT',flat=True)
+  if(project_name not in obj):
+    data = projects_log(
+                EMP_ID = emp_id,
+                PROJECT = project_name.capitalize(),
+                STATUS = 'I',
+                PROJECT_COLOR = project_color,
+                )
+    data.save()
+    return Response({
+                    'status':'true',
+                    'message':"Project added",
+                    })
+  else:
+    return Response({
+                    'status':'False',
+                    'message':"Project already exist",
+                    })
+
+
+@api_view(['POST'])
+def projectGet(request,Format=None):
+  emp_id = (request.data)['emp_id']
+  obj = projects_log.objects.filter(EMP_ID = emp_id).values('id').annotate(
+                                            project_name = F('PROJECT'),
+                                            project_color = F('PROJECT_COLOR'),
+                                            status = F('STATUS')
+                                            )
+  return Response({
+                  'status':'true',
+                  'message':"Successfull",
+                  'project_list':obj
+                 })
+
+
+def projectUpdate(request,format=None):
+  emp_id = (request.data)['emp_id']
+  p_id = (request.data)['id']
+  project_name = (request.data)['project_name']
+  project_color = (request.data)['project_color']
+  project_status = (request.data)['project_status']
+
+  project_list  = projects_log.objects.filter(EMP_ID = emp_id).values_list('PROJECT',flat=True)
+  if project_name not in project_list:
+    obj = projects_log.objects.filter(EMP_ID = emp_id, id = p_id)\
+                              .update(PROJECT = project_name,
+                                      STATUS = project_status,
+                                      PROJECT_COLOR = project_color)
+    return Response({
+                'status':'true',
+                'message':"Project updated",
+                })
+  else:
+    return Response({
+                'status':'false',
+                'message':"Project name already exist",
+                })
+
+  
+# def projectGet(request,format = None):
+
+
+
+
+
 
 
 
@@ -377,7 +448,7 @@ def taskLogUpdation(request,format=None):
 #     return HttpResponse('hello')
 
 
-def create_user(request):
+# def create_user(request):
   # EMP_ID = 'EKO-'+''.join(random.choices(string.ascii_uppercase + string.digits, k = 5))
   # NAME = 'Amrit Singh'
   # DESIGNATION = 'Backend Developer'
@@ -401,9 +472,18 @@ def create_user(request):
   #                     TOKEN = TOKEN
   #                    )
   # data.save()
-  timesheet_log.objects.all().update(SHOW_VALIDATION=0)
-  return HttpResponse('hello')
+  # timesheet_log.objects.all().update(SHOW_VALIDATION=0)
+  # return HttpResponse('hello')
 
-
-
-  
+def index(request):
+  data = task_log(
+            EMP_ID = 'EKO-L8HUG',
+            DATE = '24-9-2022',
+            DATE_TIMESTAMP = 1663957800,
+            TASK = 'please add task',
+            PROJECT = '',
+            PROJECT_COLOR = '',
+            REMARKS = 'please add remark'
+          )
+  data.save()
+  return HttpResponse('Hello')
