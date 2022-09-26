@@ -1,8 +1,9 @@
-from django.conf import settings
 from apiApp.models import task_log, timesheet_log,user_details
 from datetime import datetime
+import calendar
 
-def schedule_api():
+
+def on_working():
     user_list = user_details.objects.values_list('EMP_ID',flat=True)
     for i in list(user_list):
         obj = timesheet_log(
@@ -12,7 +13,7 @@ def schedule_api():
                             DAY_TYPE = "W"
                            )
         obj.save()
-
+        
         task = task_log(
                         EMP_ID = i,
                         DATE = datetime.now().strftime('%d %b %Y'),
@@ -44,3 +45,34 @@ def on_leave():
                         REMARKS = 'Holiday',
                        )
         task.save()
+
+
+
+def working_days():
+    cur_date = datetime.now()
+    # timestamp = time.mktime(datetime.strptime(string_date, '%d-%m-%Y').timetuple())
+    if cur_date.weekday() == 6:
+        on_leave()
+    elif cur_date.weekday() == 5:
+        cal = calendar.monthcalendar(cur_date.year, cur_date.month)
+        try:
+            sat_list = [cal[0][calendar.SATURDAY],
+                        cal[1][calendar.SATURDAY],
+                        cal[2][calendar.SATURDAY],
+                        cal[3][calendar.SATURDAY],
+                        cal[4][calendar.SATURDAY]]
+        except:
+            sat_list = [cal[0][calendar.SATURDAY],
+                        cal[1][calendar.SATURDAY],
+                        cal[2][calendar.SATURDAY],
+                        cal[3][calendar.SATURDAY]]
+        if 0 in sat_list:
+            sat_list.remove(0)
+        if cur_date.day in sat_list[0::2]:
+            on_leave()
+        else:
+            on_working()
+    else:
+        on_working()
+
+

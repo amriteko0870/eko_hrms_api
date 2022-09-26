@@ -6,8 +6,9 @@ from apiApp.models import leave_log, overtime_log, projects_log, task_log, times
 
 # Create your views here.
 from django.db.models.functions import Cast,Coalesce
-from django.db.models import F,Sum
-# from django.db.models import Avg,Count,Case, When, IntegerField,Sum,FloatField,CharField
+from django.db.models import Value as V
+from django.db.models import F,Sum,CharField
+from django.db.models import Avg,Count,Case, When, IntegerField,Sum,FloatField,CharField
 
 from rest_framework.decorators import parser_classes,api_view
 from rest_framework.parsers import MultiPartParser,FormParser
@@ -368,9 +369,21 @@ def projectAdd(request,format=None):
                 PROJECT_COLOR = project_color,
                 )
     data.save()
+    u_obj = projects_log.objects.filter(EMP_ID = emp_id).values('id').annotate(
+                                            project_name = F('PROJECT'),
+                                            project_color = F('PROJECT_COLOR'),
+                                            status = Case(
+                                                          When(STATUS='I', then=V('In Progress')),
+                                                          When(STATUS='O', then=V('On Hold')),
+                                                          When(STATUS='C', then=V('Completed')),
+                                                          output_field=CharField(),
+                                                          )
+                                            )
+    
     return Response({
                     'status':'true',
                     'message':"Project added",
+                    'updated_list':u_obj
                     })
   else:
     return Response({
@@ -385,7 +398,13 @@ def projectGet(request,Format=None):
   obj = projects_log.objects.filter(EMP_ID = emp_id).values('id').annotate(
                                             project_name = F('PROJECT'),
                                             project_color = F('PROJECT_COLOR'),
-                                            status = F('STATUS')
+                                            # status = F('STATUS')
+                                            status = Case(
+                                                          When(STATUS='I', then=V('In Progress')),
+                                                          When(STATUS='O', then=V('On Hold')),
+                                                          When(STATUS='C', then=V('Completed')),
+                                                          output_field=CharField(),
+                                                          )
                                             )
   return Response({
                   'status':'true',
@@ -475,15 +494,10 @@ def projectUpdate(request,format=None):
   # timesheet_log.objects.all().update(SHOW_VALIDATION=0)
   # return HttpResponse('hello')
 
+@api_view(['POST'])
 def index(request):
-  data = task_log(
-            EMP_ID = 'EKO-L8HUG',
-            DATE = '24-9-2022',
-            DATE_TIMESTAMP = 1663957800,
-            TASK = 'please add task',
-            PROJECT = '',
-            PROJECT_COLOR = '',
-            REMARKS = 'please add remark'
-          )
-  data.save()
-  return HttpResponse('Hello')
+  pass
+
+
+
+
